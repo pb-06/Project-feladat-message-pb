@@ -3,15 +3,9 @@ import { useParams } from 'react-router-dom';
 
 export function Auth() {
   const { pathname } = useParams();
+  
   return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
-      }}
-    >
+    <div className='flex justify-center items-center min-h-screen'>
       <AuthView pathname={pathname} />
     </div>
   );

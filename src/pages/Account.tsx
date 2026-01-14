@@ -3,5 +3,8 @@ import { useParams } from 'react-router-dom';
 
 export function Account() {
   const { pathname } = useParams();
-  return <AccountView pathname={pathname} />;
+
+  return (
+    <AccountView pathname={pathname} />
+  );
 }
