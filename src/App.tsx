@@ -1,11 +1,16 @@
 import './App.css'
+import { Route, Routes } from 'react-router-dom';
+import { Account } from './pages/Account';
+import { Auth } from './pages/Auth';
+import { Home } from './pages/Home';
 
-function App() {
+
+export default function App() {
   return (
-    <h1 className="text-3xl font-bold underline">
-      Hello world!
-    </h1>
-  )
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/auth/:pathname" element={<Auth />} />
+      <Route path="/account/:pathname" element={<Account />} />
+    </Routes>
+  );
 }
-
-export default App
