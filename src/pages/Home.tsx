@@ -401,6 +401,28 @@ export function Home() {
   const [userName, setUserName] = useState<string>('');
 
   useEffect(() => {
+    // User adatok lekérése az authClient-ből
+    const loadUser = async () => {
+      try {
+        const session = await authClient.getSession();
+        console.log('Session:', session);
+        
+        // Az authClient.getSession() { data: { user: {...} }} struktúrát ad vissza
+        const user = (session?.data as any)?.user;
+        if (user?.id) {
+          setUserId(user.id);
+          setUserEmail(user.email || '');
+          setUserName(user.name || '');
+        }
+      } catch (err) {
+        console.error('Load user error:', err);
+      }
+    };
+
+    loadUser();
+  }, []);
+
+  useEffect(() => {
     // Felhasználó szinkronizálása az adatbázisba
     const syncUser = async () => {
       if (userId && !synced) {
