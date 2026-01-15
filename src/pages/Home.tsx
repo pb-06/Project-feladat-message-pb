@@ -1,8 +1,13 @@
 //import { useState } from 'react';
 import { RedirectToSignIn, SignedIn, UserButton } from '@neondatabase/neon-js/auth/react/ui';
+import { useEffect } from 'react';
 
 export function Home() {
-   const handlePostButtonClick = async (e: any) => {
+  useEffect(() => {
+
+  })
+
+  const handlePostButtonClick = async (e: any) => {
     e.preventDefault();
 
     const resJson = await fetch('/api/messages', {
@@ -26,7 +31,7 @@ export function Home() {
             <UserButton />
 
             <button onClick={handlePostButtonClick}>
-            Test
+              Test
             </button>
 
           </div>
