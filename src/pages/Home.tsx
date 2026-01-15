@@ -1,6 +1,21 @@
+import { useState } from 'react';
 import { RedirectToSignIn, SignedIn, UserButton } from '@neondatabase/neon-js/auth/react/ui';
 
 export function Home() {
+   const handlePostButtonClick = async (e: any) => {
+    e.preventDefault();
+
+    const resJson = await fetch('/api/messages', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      //body: JSON.stringify({ id: id })
+    });
+
+    console.log('resJson', resJson);
+    const resObj = await resJson.json();
+    console.log('resObj', resObj);
+  }
+
   return (
     <>
       <SignedIn>
@@ -9,6 +24,11 @@ export function Home() {
             <h1>Welcome!</h1>
             <p>You're successfully authenticated.</p>
             <UserButton />
+
+            <button onClick={handlePostButtonClick}>
+            Test
+            </button>
+
           </div>
         </div>
       </SignedIn>
