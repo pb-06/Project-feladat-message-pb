@@ -424,6 +424,8 @@ export function Home() {
   const [userId, setUserId] = useState<string>('');
   const [userEmail, setUserEmail] = useState<string>('');
   const [userName, setUserName] = useState<string>('');
+  const [showSeedBtn, setShowSeedBtn] = useState(false);
+  const [seedLoading, setSeedLoading] = useState(false);
 
   useEffect(() => {
     // User adatok lekérése az authClient-ből
@@ -478,6 +480,35 @@ export function Home() {
     syncUser();
   }, [userId, synced, userEmail, userName]);
 
+  const seedDatabase = async () => {
+    setSeedLoading(true);
+    try {
+      console.log('🌱 Starting database seed...');
+      const response = await fetch('/api/seed/demo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+      console.log('✅ Seed result:', result);
+
+      if (!response.ok) {
+        alert(`Hiba: ${result.error}`);
+        return;
+      }
+
+      alert(`✅ ${result.message}\n\n${result.usersCreated} felhasználó és ${result.messagesCreated} üzenet létrehozva!`);
+      setShowSeedBtn(false);
+    } catch (err: any) {
+      console.error('❌ Seed error:', err);
+      alert(`Seed hiba: ${err.message}`);
+    } finally {
+      setSeedLoading(false);
+    }
+  };
+
   const tabs = [
     { id: 'inbox' as const, label: 'Beérkezett', icon: Inbox },
     { id: 'send' as const, label: 'Új üzenet', icon: MessageSquare },
@@ -499,7 +530,17 @@ export function Home() {
                   <h1 className="text-xl font-bold text-gray-900">Üzenetküldő</h1>
                 </div>
 
-                <UserButton />
+                <div className="flex items-center gap-4">
+                  {!showSeedBtn && userId && (
+                    <button
+                      onClick={() => setShowSeedBtn(true)}
+                      className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded hover:bg-yellow-200"
+                    >
+                      🌱 Demo adatok
+                    </button>
+                  )}
+                  <UserButton />
+                </div>
               </div>
             </div>
 
@@ -526,6 +567,30 @@ export function Home() {
 
           {/* Main content */}
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {showSeedBtn && (
+              <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <h3 className="font-semibold text-yellow-900 mb-2">🌱 Adatbázis feltöltése</h3>
+                <p className="text-sm text-yellow-800 mb-3">
+                  Szeretnéd feltölteni az adatbázist demo adatokkal? Ez 4 felhasználót és 6 üzenetet hoz létre.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={seedDatabase}
+                    disabled={seedLoading}
+                    className="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 disabled:opacity-50"
+                  >
+                    {seedLoading ? 'Betöltés...' : '✅ Igen, töltsd fel'}
+                  </button>
+                  <button
+                    onClick={() => setShowSeedBtn(false)}
+                    className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
+                  >
+                    ❌ Mégse
+                  </button>
+                </div>
+              </div>
+            )}
+
             {!userId ? (
               <div className="text-center py-12">Betöltés...</div>
             ) : (
