@@ -5,22 +5,33 @@ import { Mail, Send, Inbox, Trash2, X, Search, MessageSquare } from 'lucide-reac
 
 // API helper function
 async function apiRequest(endpoint: string, userId: string, options: any = {}) {
-  const response = await fetch(`/api${endpoint}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      'x-user-id': userId,
-      ...options.headers,
-    },
-  });
+  try {
+    const url = `/api${endpoint}`;
+    console.log(`📤 API Request: ${options.method || 'GET'} ${url}`, { userId, endpoint });
+    
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-id': userId,
+        ...options.headers,
+      },
+    });
 
-  const result = await response.json();
+    const result = await response.json();
+    console.log(`📥 API Response:`, { status: response.status, data: result });
 
-  if (!response.ok) {
-    throw new Error(result.error || 'Hiba történt');
+    if (!response.ok) {
+      const errorMsg = result.error || result.message || 'Hiba történt';
+      console.error(`❌ API Error: ${response.status} - ${errorMsg}`);
+      throw new Error(errorMsg);
+    }
+
+    return result;
+  } catch (error: any) {
+    console.error(`🔴 API Request Failed:`, error);
+    throw error;
   }
-
-  return result;
 }
 
 // Message type
@@ -57,11 +68,13 @@ function MessagesTab({ userId }: { userId: string }) {
 
   const loadMessages = async () => {
     try {
+      console.log('📬 Loading inbox messages...');
       const result = await apiRequest('/messages/inbox', userId);
+      console.log('📬 Inbox loaded:', result.data);
       setMessages(result.data || []);
-    } catch (err) {
-      console.error('Load messages error:', err);
-      alert('Hiba az üzenetek betöltése közben');
+    } catch (err: any) {
+      console.error('❌ Load messages error:', err);
+      alert(`Hiba az üzenetek betöltése közben: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -157,11 +170,18 @@ function SendMessageTab({ userId }: { userId: string }) {
   }, [searchTerm]);
 
   const searchUsers = async () => {
+    if (searchTerm.length < 2) {
+      setUsers([]);
+      return;
+    }
     try {
-      const result = await apiRequest(`/users/search?q=${searchTerm}`, userId);
+      console.log('🔍 Searching users:', searchTerm);
+      const result = await apiRequest(`/users/search?q=${encodeURIComponent(searchTerm)}`, userId);
+      console.log('🔍 Search results:', result.data);
       setUsers(result.data || []);
-    } catch (err) {
-      console.error('Search error:', err);
+    } catch (err: any) {
+      console.error('❌ Search error:', err);
+      setUsers([]);
     }
   };
 
@@ -177,7 +197,8 @@ function SendMessageTab({ userId }: { userId: string }) {
     }
 
     try {
-      await apiRequest('/messages', userId, {
+      console.log('📨 Sending message to:', selectedUser.email);
+      const result = await apiRequest('/messages', userId, {
         method: 'POST',
         body: JSON.stringify({
           receiver_email: selectedUser.email,
@@ -185,7 +206,8 @@ function SendMessageTab({ userId }: { userId: string }) {
           content,
         }),
       });
-
+      
+      console.log('✅ Message sent successfully:', result);
       setSuccess(true);
       setSubject('');
       setContent('');
@@ -194,7 +216,8 @@ function SendMessageTab({ userId }: { userId: string }) {
 
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
-      alert(err.message);
+      console.error('❌ Send message error:', err);
+      alert(`Hiba az üzenet küldésekor: ${err.message}`);
     }
   };
 
@@ -314,11 +337,13 @@ function SentMessagesTab({ userId }: { userId: string }) {
 
   const loadMessages = async () => {
     try {
+      console.log('📤 Loading sent messages...');
       const result = await apiRequest('/messages/sent', userId);
+      console.log('📤 Sent messages loaded:', result.data);
       setMessages(result.data || []);
-    } catch (err) {
-      console.error('Load sent messages error:', err);
-      alert('Hiba az üzenetek betöltése közben');
+    } catch (err: any) {
+      console.error('❌ Load sent messages error:', err);
+      alert(`Hiba az üzenetek betöltése közben: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -404,18 +429,24 @@ export function Home() {
     // User adatok lekérése az authClient-ből
     const loadUser = async () => {
       try {
+        console.log('👤 Loading user data...');
         const session = await authClient.getSession();
-        console.log('Session:', session);
+        console.log('✅ Session received:', session);
         
         // Az authClient.getSession() { data: { user: {...} }} struktúrát ad vissza
         const user = (session?.data as any)?.user;
+        console.log('👤 User object:', user);
+        
         if (user?.id) {
+          console.log('✅ User ID found:', user.id);
           setUserId(user.id);
           setUserEmail(user.email || '');
           setUserName(user.name || '');
+        } else {
+          console.warn('⚠️ No user ID found in session');
         }
       } catch (err) {
-        console.error('Load user error:', err);
+        console.error('❌ Load user error:', err);
       }
     };
 
@@ -427,7 +458,8 @@ export function Home() {
     const syncUser = async () => {
       if (userId && !synced) {
         try {
-          await apiRequest('/users/sync', userId, {
+          console.log('🔄 Syncing user to database...', { userId, userEmail, userName });
+          const result = await apiRequest('/users/sync', userId, {
             method: 'POST',
             body: JSON.stringify({
               userId: userId,
@@ -435,9 +467,10 @@ export function Home() {
               full_name: userName,
             }),
           });
+          console.log('✅ User synced successfully:', result);
           setSynced(true);
-        } catch (err) {
-          console.error('User sync error:', err);
+        } catch (err: any) {
+          console.error('❌ User sync error:', err);
         }
       }
     };
