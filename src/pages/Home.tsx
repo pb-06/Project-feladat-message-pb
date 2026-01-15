@@ -1,7 +1,7 @@
 import { RedirectToSignIn, SignedIn, UserButton } from '@neondatabase/neon-js/auth/react/ui';
 import { useState, useEffect } from 'react';
 import { authClient } from '../lib/auth';
-import { Mail, Send, Inbox, Trash2, X, Search, MessageSquare } from 'lucide-react';
+import { Mail, Send, Inbox, Trash2, X, Search } from 'lucide-react';
 
 // API helper function
 async function apiRequest(endpoint: string, userId: string, options: any = {}) {
@@ -61,6 +61,13 @@ interface User {
 function MessagesTab({ userId }: { userId: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showNewMessage, setShowNewMessage] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [subject, setSubject] = useState('');
+  const [content, setContent] = useState('');
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     loadMessages();
@@ -77,6 +84,65 @@ function MessagesTab({ userId }: { userId: string }) {
       alert(`Hiba az üzenetek betöltése közben: ${err.message}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const searchUsers = async () => {
+    if (searchTerm.length < 2) {
+      setUsers([]);
+      return;
+    }
+    try {
+      console.log('🔍 Searching users:', searchTerm);
+      const result = await apiRequest(`/users/search?q=${encodeURIComponent(searchTerm)}`, userId);
+      console.log('🔍 Search results:', result.data);
+      setUsers(result.data || []);
+    } catch (err: any) {
+      console.error('❌ Search error:', err);
+      setUsers([]);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!selectedUser) {
+      alert('Válassz címzettet!');
+      return;
+    }
+
+    if (!content.trim()) {
+      alert('Az üzenet nem lehet üres!');
+      return;
+    }
+
+    setSending(true);
+    try {
+      console.log('📨 Sending message to:', selectedUser.email);
+      await apiRequest('/messages', userId, {
+        method: 'POST',
+        body: JSON.stringify({
+          receiver_email: selectedUser.email,
+          subject,
+          content,
+        }),
+      });
+      
+      console.log('✅ Message sent successfully');
+      alert('✅ Üzenet sikeresen elküldve!');
+      
+      // Reset forma
+      setSubject('');
+      setContent('');
+      setSelectedUser(null);
+      setSearchTerm('');
+      setShowNewMessage(false);
+      
+      // Üzenetek újratöltése
+      loadMessages();
+    } catch (err: any) {
+      console.error('❌ Send message error:', err);
+      alert(`Hiba az üzenet küldésekor: ${err.message}`);
+    } finally {
+      setSending(false);
     }
   };
 
@@ -97,7 +163,162 @@ function MessagesTab({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-3">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Beérkezett üzenetek</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold text-gray-800">Beérkezett üzenetek</h2>
+        <button
+          onClick={() => setShowNewMessage(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 font-semibold"
+        >
+          <Send size={18} />
+          + Új üzenet
+        </button>
+      </div>
+      
+      {/* Új üzenet modal */}
+      {showNewMessage && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 space-y-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-800">Új üzenet</h3>
+              <button
+                onClick={() => {
+                  setShowNewMessage(false);
+                  setSelectedUser(null);
+                  setSearchTerm('');
+                  setSubject('');
+                  setContent('');
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Címzett kiválasztás */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Címzett *
+              </label>
+
+              {selectedUser ? (
+                <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg border border-blue-200">
+                  <div>
+                    <div className="font-medium text-blue-900">
+                      {selectedUser.full_name || selectedUser.email}
+                    </div>
+                    <div className="text-xs text-blue-700">{selectedUser.email}</div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedUser(null);
+                      setSearchTerm('');
+                      setUsers([]);
+                    }}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              ) : (
+                <div className="relative">
+                  <div className="flex items-center">
+                    <Search className="absolute left-3 text-gray-400" size={18} />
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        if (e.target.value.length > 1) {
+                          searchUsers();
+                        }
+                      }}
+                      placeholder="Keress email vagy név..."
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+
+                  {users.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                      {users.map((u) => (
+                        <button
+                          key={u.id}
+                          onClick={() => {
+                            setSelectedUser(u);
+                            setSearchTerm('');
+                            setUsers([]);
+                          }}
+                          className="w-full text-left px-4 py-2 hover:bg-gray-50 border-b last:border-b-0 text-sm"
+                        >
+                          <div className="font-medium text-gray-900">
+                            {u.full_name || 'Névtelen'}
+                          </div>
+                          <div className="text-xs text-gray-500">{u.email}</div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Tárgy */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tárgy (opcionális)
+              </label>
+              <input
+                type="text"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="Üzenet tárgy..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
+            </div>
+
+            {/* Üzenet */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Üzenet *
+              </label>
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="Írd ide az üzenetét..."
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
+            </div>
+
+            {/* Gombók */}
+            <div className="flex gap-2 pt-4">
+              <button
+                onClick={handleSendMessage}
+                disabled={sending || !selectedUser || !content.trim()}
+                className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+              >
+                {sending ? 'Küldés...' : (
+                  <>
+                    <Send size={16} />
+                    Küldés
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  setShowNewMessage(false);
+                  setSelectedUser(null);
+                  setSearchTerm('');
+                  setSubject('');
+                  setContent('');
+                }}
+                className="flex-1 bg-gray-300 text-gray-800 py-2 rounded-lg font-semibold hover:bg-gray-400 text-sm"
+              >
+                Mégse
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {messages.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-12 text-center">
@@ -148,180 +369,6 @@ function MessagesTab({ userId }: { userId: string }) {
           </div>
         ))
       )}
-    </div>
-  );
-}
-
-// Send Message komponens
-function SendMessageTab({ userId }: { userId: string }) {
-  const [users, setUsers] = useState<User[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [subject, setSubject] = useState('');
-  const [content, setContent] = useState('');
-  const [success, setSuccess] = useState(false);
-
-  useEffect(() => {
-    if (searchTerm.length > 1) {
-      searchUsers();
-    } else {
-      setUsers([]);
-    }
-  }, [searchTerm]);
-
-  const searchUsers = async () => {
-    if (searchTerm.length < 2) {
-      setUsers([]);
-      return;
-    }
-    try {
-      console.log('🔍 Searching users:', searchTerm);
-      const result = await apiRequest(`/users/search?q=${encodeURIComponent(searchTerm)}`, userId);
-      console.log('🔍 Search results:', result.data);
-      setUsers(result.data || []);
-    } catch (err: any) {
-      console.error('❌ Search error:', err);
-      setUsers([]);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!selectedUser) {
-      alert('Válassz címzettet!');
-      return;
-    }
-
-    if (!content.trim()) {
-      alert('Az üzenet nem lehet üres!');
-      return;
-    }
-
-    try {
-      console.log('📨 Sending message to:', selectedUser.email);
-      const result = await apiRequest('/messages', userId, {
-        method: 'POST',
-        body: JSON.stringify({
-          receiver_email: selectedUser.email,
-          subject,
-          content,
-        }),
-      });
-      
-      console.log('✅ Message sent successfully:', result);
-      setSuccess(true);
-      setSubject('');
-      setContent('');
-      setSelectedUser(null);
-      setSearchTerm('');
-
-      setTimeout(() => setSuccess(false), 3000);
-    } catch (err: any) {
-      console.error('❌ Send message error:', err);
-      alert(`Hiba az üzenet küldésekor: ${err.message}`);
-    }
-  };
-
-  return (
-    <div className="max-w-2xl">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Új üzenet</h2>
-
-      {success && (
-        <div className="mb-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">
-          Üzenet sikeresen elküldve!
-        </div>
-      )}
-
-      <div className="bg-white rounded-lg shadow p-6 space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Címzett
-          </label>
-
-          {selectedUser ? (
-            <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg">
-              <div>
-                <div className="font-medium text-blue-900">
-                  {selectedUser.full_name || selectedUser.email}
-                </div>
-                <div className="text-sm text-blue-700">{selectedUser.email}</div>
-              </div>
-              <button
-                onClick={() => setSelectedUser(null)}
-                className="text-blue-600 hover:text-blue-800"
-              >
-                <X size={20} />
-              </button>
-            </div>
-          ) : (
-            <div className="relative">
-              <div className="flex items-center">
-                <Search className="absolute left-3 text-gray-400" size={20} />
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Keress email vagy név alapján..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              {users.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                  {users.map((u) => (
-                    <button
-                      key={u.id}
-                      onClick={() => {
-                        setSelectedUser(u);
-                        setSearchTerm('');
-                      }}
-                      className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b last:border-b-0"
-                    >
-                      <div className="font-medium text-gray-900">
-                        {u.full_name || 'Névtelen'}
-                      </div>
-                      <div className="text-sm text-gray-500">{u.email}</div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Tárgy (opcionális)
-          </label>
-          <input
-            type="text"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            placeholder="Tárgy..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Üzenet *
-          </label>
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Írd ide az üzeneted..."
-            rows={8}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-
-        <button
-          onClick={handleSubmit}
-          className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2"
-        >
-          <Send size={20} />
-          Küldés
-        </button>
-      </div>
     </div>
   );
 }
@@ -511,7 +558,6 @@ export function Home() {
 
   const tabs = [
     { id: 'inbox' as const, label: 'Beérkezett', icon: Inbox },
-    { id: 'send' as const, label: 'Új üzenet', icon: MessageSquare },
     { id: 'sent' as const, label: 'Elküldött', icon: Send },
   ];
 
@@ -596,7 +642,6 @@ export function Home() {
             ) : (
               <>
                 {activeTab === 'inbox' && <MessagesTab userId={userId} />}
-                {activeTab === 'send' && <SendMessageTab userId={userId} />}
                 {activeTab === 'sent' && <SentMessagesTab userId={userId} />}
               </>
             )}
