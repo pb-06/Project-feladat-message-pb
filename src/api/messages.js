@@ -8,7 +8,7 @@ export default async function handler(req, res) {
 
     if (req.method == 'GET') {
         try {
-            sql = `SELECT id FROM public.users`;
+            sql = `SELECT id, name FROM public.messages`;
             data = await pool.query(sql);
             console.log('data', data);
             return res.status(200).json({ sql, data, error });
