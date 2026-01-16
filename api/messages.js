@@ -21,16 +21,16 @@ export default async function handler(req, res) {
     // POST - Új üzenet küldése
     if (req.method === 'POST') {
         try {
-            const { receiver_email, subject, content } = req.body;
+            const { receiver_name, subject, content } = req.body;
 
             // Validáció
-            if (!receiver_email || !content) {
+            if (!receiver_name || !content) {
                 return res.status(400).json({ error: 'Címzett email és üzenet szükséges' });
             }
 
             // Címzett keresése email alapján
-            const userSql = 'SELECT id FROM users WHERE email = $1';
-            const userResult = await pool.query(userSql, [receiver_email]);
+            const userSql = 'SELECT id FROM users WHERE full_name = $1';
+            const userResult = await pool.query(userSql, [receiver_name]);
 
             if (userResult.rows.length === 0) {
                 return res.status(404).json({ error: 'A címzett nem található' });
