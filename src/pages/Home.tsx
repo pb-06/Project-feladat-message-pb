@@ -175,7 +175,7 @@ function InboxTab({ userId }: { userId: string }) {
           <p className='font-semibold text-xl'>Nincs üzeneted</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-2">
           {messages.map((msg) => (
             <Card key={msg.id}>
               <CardHeader>
@@ -252,31 +252,33 @@ function SentTab({ userId }: { userId: string }) {
           <p className='font-semibold text-xl'>Még nem küldtél üzenetet</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {messages.map((msg) => (
-            <div key={msg.id} className="bg-gray-400 rounded-lg shadow p-4 border-l-4 border-green-400">
-              <div className="flex justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs text-gray-600">➡️</span>
-                    <span className="font-bold">{msg.receiver_name || msg.receiver_email}</span>
-                    {msg.is_read && <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">✓ ELOLVASVA</span>}
-                  </div>
-                  {msg.subject && <h4 className="font-semibold mb-1">{msg.subject}</h4>}
-                  <p className="text-gray-700 text-sm mb-2">{msg.content}</p>
-                  <p className="text-xs text-gray-500">{new Date(msg.sent_at).toLocaleString('hu-HU')}</p>
-                </div>
-
-                <Button
-                  size='icon'
-                  className='from-destructive via-destructive/60 to-destructive focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 bg-transparent bg-gradient-to-r [background-size:200%_auto] text-white hover:bg-transparent hover:bg-[99%_center]'
-                  onClick={() => deleteMsg(msg.id)}
-                >
-                  <Trash2 />
-                  <span className='sr-only'>Delete</span>
-                </Button>
-              </div>
-            </div>
+            <Card key={msg.id}>
+              <CardHeader>
+                <CardTitle>
+                  {msg.receiver_name || msg.receiver_email}
+                  {msg.is_read && <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">ELOLVASVA</span>}
+                </CardTitle>
+                <CardDescription>{msg.subject}</CardDescription>
+                <CardAction>
+                  <Button
+                    size='icon'
+                    className='from-destructive via-destructive/60 to-destructive focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 bg-transparent bg-gradient-to-r [background-size:200%_auto] text-white hover:bg-transparent hover:bg-[99%_center]'
+                    onClick={() => deleteMsg(msg.id)}
+                  >
+                    <Trash2 />
+                    <span className='sr-only'>Delete</span>
+                  </Button>
+                </CardAction>
+              </CardHeader>
+              <CardContent>
+                <p>{msg.content}</p>
+              </CardContent>
+              <CardFooter>
+                <p className="text-xs text-gray-500">{new Date(msg.sent_at).toLocaleString('hu-HU')}</p>
+              </CardFooter>
+            </Card>
           ))}
         </div>
       )}
