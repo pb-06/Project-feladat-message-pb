@@ -246,7 +246,7 @@ function InboxTab({ userId }: { userId: string }) {
 
       {/* Messages */}
       {messages.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
+        <div className="bg-gray-800 rounded-lg shadow p-12 text-center">
           <Inbox className="mx-auto text-gray-400 mb-4" size={48} />
           <p className="text-gray-600">Nincs üzeneted</p>
         </div>
@@ -322,14 +322,14 @@ function SentTab({ userId }: { userId: string }) {
     <div>
       <h2 className="text-2xl font-bold mb-6">Elküldött üzenetek</h2>
       {messages.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
+        <div className="bg-gray-600 rounded-lg shadow p-12 text-center">
           <Send className="mx-auto text-gray-400 mb-4" size={48} />
-          <p className="text-gray-600">Még nem küldtél üzenetet</p>
+          <p className="text-white">Még nem küldtél üzenetet</p>
         </div>
       ) : (
         <div className="space-y-3">
           {messages.map((msg) => (
-            <div key={msg.id} className="bg-white rounded-lg shadow p-4 border-l-4 border-green-400">
+            <div key={msg.id} className="bg-gray-400 rounded-lg shadow p-4 border-l-4 border-green-400">
               <div className="flex justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
@@ -414,7 +414,7 @@ export function Home() {
   return (
     <>
       <SignedIn>
-        <div className="min-h-screen bg-gray-100">
+        <div className="min-h-screen bg-black">
           <header className="bg-white shadow sticky top-0 z-20">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
               <div className="flex items-center gap-3">
