@@ -6,6 +6,7 @@ import { authClient } from '../lib/auth';
 import { Mail, Send, Inbox, Trash2 } from 'lucide-react';
 
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog"
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -169,36 +170,38 @@ function InboxTab({ userId }: { userId: string }) {
 
       {/* Messages */}
       {messages.length === 0 ? (
-        <div className="bg-gray-800 rounded-lg shadow p-12 text-center">
-          <Inbox className="mx-auto text-gray-400 mb-4" size={48} />
-          <p className="text-gray-600">Nincs üzeneted</p>
+        <div className='flex flex-col items-center justify-center'>
+          <Inbox size={48} />
+          <p className='font-semibold text-xl'>Nincs üzeneted</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`bg-gray-800 rounded-lg shadow p-4 border-l-4 ${msg.is_read ? 'border-gray-300' : 'border-blue-500'
-                }`}
-            >
-              <div className="flex justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold">{msg.sender_name || msg.sender_email}</span>
-                    {!msg.is_read && <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded">ÚJ</span>}
-                  </div>
-                  {msg.subject && <h4 className="font-semibold mb-1">{msg.subject}</h4>}
-                  <p className="text-gray-700 text-sm mb-2">{msg.content}</p>
-                  <p className="text-xs text-gray-500">{new Date(msg.sent_at).toLocaleString('hu-HU')}</p>
-                </div>
-                <button
-                  onClick={() => deleteMsg(msg.id)}
-                  className="text-red-500 hover:text-red-700 p-2"
-                >
-                  <Trash2 size={18} />
-                </button>
-              </div>
-            </div>
+            <Card key={msg.id}>
+              <CardHeader>
+                <CardTitle>
+                  {msg.sender_name || msg.sender_email}
+                  {!msg.is_read && <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded">ÚJ</span>}
+                </CardTitle>
+                <CardDescription>{msg.subject}</CardDescription>
+                <CardAction>
+                  <Button
+                    size='icon'
+                    className='from-destructive via-destructive/60 to-destructive focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 bg-transparent bg-gradient-to-r [background-size:200%_auto] text-white hover:bg-transparent hover:bg-[99%_center]'
+                    onClick={() => deleteMsg(msg.id)}
+                  >
+                    <Trash2 />
+                    <span className='sr-only'>Delete</span>
+                  </Button>
+                </CardAction>
+              </CardHeader>
+              <CardContent>
+                <p>{msg.content}</p>
+              </CardContent>
+              <CardFooter>
+                <p className="text-xs text-gray-500">{new Date(msg.sent_at).toLocaleString('hu-HU')}</p>
+              </CardFooter>
+            </Card>
           ))}
         </div>
       )}
@@ -244,9 +247,9 @@ function SentTab({ userId }: { userId: string }) {
     <div>
       <h2 className="text-2xl font-bold mb-6 mt-32">Elküldött üzenetek</h2>
       {messages.length === 0 ? (
-        <div className="bg-gray-600 rounded-lg shadow p-12 text-center">
-          <Send className="mx-auto text-gray-400 mb-4" size={48} />
-          <p className="text-white">Még nem küldtél üzenetet</p>
+        <div className='flex flex-col items-center justify-center'>
+          <Send size={48} />
+          <p className='font-semibold text-xl'>Még nem küldtél üzenetet</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -263,12 +266,15 @@ function SentTab({ userId }: { userId: string }) {
                   <p className="text-gray-700 text-sm mb-2">{msg.content}</p>
                   <p className="text-xs text-gray-500">{new Date(msg.sent_at).toLocaleString('hu-HU')}</p>
                 </div>
-                <button
+
+                <Button
+                  size='icon'
+                  className='from-destructive via-destructive/60 to-destructive focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 bg-transparent bg-gradient-to-r [background-size:200%_auto] text-white hover:bg-transparent hover:bg-[99%_center]'
                   onClick={() => deleteMsg(msg.id)}
-                  className="text-red-500 hover:text-red-700 p-2"
                 >
-                  <Trash2 size={18} />
-                </button>
+                  <Trash2 />
+                  <span className='sr-only'>Delete</span>
+                </Button>
               </div>
             </div>
           ))}
