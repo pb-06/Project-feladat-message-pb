@@ -130,7 +130,7 @@ function InboxTab({ userId }: { userId: string }) {
             <div className="grid gap-4">
               <div className="grid gap-4">
                 <Label htmlFor="cimzett">Címzett</Label>
-                <Input type='text' id="cimzett" name="cimzett" placeholder='Keress valakit...' />
+                <Input type='text' id="cimzett" name="cimzett" placeholder='Keress valakit...' onChange={(e) => setCimzett(e.target.value)} />
               </div>
               <div className="grid gap-4">
                 <Label htmlFor="targy">Tárgy (opcionális)</Label>
