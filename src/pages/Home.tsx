@@ -140,7 +140,7 @@ function InboxTab({ userId }: { userId: string }) {
       {/* Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+          <div className="bg-gray-800 text-white rounded-lg p-6 max-w-md w-full">
             <h3 className="text-xl font-bold mb-4">Új üzenet</h3>
 
             <div className="mb-4">
@@ -175,7 +175,7 @@ function InboxTab({ userId }: { userId: string }) {
                     className="w-full px-3 py-2 border rounded"
                   />
                   {users.length > 0 && (
-                    <div className="absolute w-full mt-1 bg-white border rounded shadow-lg max-h-40 overflow-y-auto z-10">
+                    <div className="absolute w-full mt-1 bg-gray-800 text-white border rounded shadow-lg max-h-40 overflow-y-auto z-10">
                       {users.map((u) => (
                         <button
                           key={u.id}
@@ -255,7 +255,7 @@ function InboxTab({ userId }: { userId: string }) {
           {messages.map((msg) => (
             <div
               key={msg.id}
-              className={`bg-white rounded-lg shadow p-4 border-l-4 ${
+              className={`bg-gray-800 rounded-lg shadow p-4 border-l-4 ${
                 msg.is_read ? 'border-gray-300' : 'border-blue-500'
               }`}
             >
@@ -415,7 +415,7 @@ export function Home() {
     <>
       <SignedIn>
         <div className="min-h-screen bg-black">
-          <header className="bg-white shadow sticky top-0 z-20">
+          <header className="bg-gray-600 shadow sticky top-0 z-20">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
               <div className="flex items-center gap-3">
                 <Mail className="text-blue-600" size={28} />
